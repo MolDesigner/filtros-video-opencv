@@ -1,13 +1,14 @@
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
-fig, ax = plt.subplots(figsize=(13, 7.4)); ax.set_xlim(0,130); ax.set_ylim(0,74); ax.axis("off")
+fig, ax = plt.subplots(figsize=(13, 8.6)); ax.set_xlim(0,130); ax.set_ylim(-14,74); ax.axis("off")
 C_ABS="#E8EEF7"; C_CON="#FFFFFF"; C_MAIN="#FFF4E0"; EDGE="#33475B"
-def caja(x,y,w,h,titulo,miembros=(),color=C_CON,abstracta=False,fs=10):
+def caja(x,y,w,h,titulo,miembros=(),color=C_CON,abstracta=False,fs=10,estereotipo=None):
     ax.add_patch(Rectangle((x,y),w,h,fc=color,ec=EDGE,lw=1.3))
-    th=(5.4 if abstracta else 4.2) if miembros else h
-    ax.text(x+w/2,y+h-th/2,("«abstracta»\n" if abstracta else "")+titulo,ha="center",va="center",
-            fontsize=fs if not abstracta else 9.5,weight="bold",style="italic" if abstracta else "normal")
+    if abstracta: estereotipo="«abstracta»"
+    th=(5.4 if estereotipo else 4.2) if miembros else h
+    ax.text(x+w/2,y+h-th/2,(estereotipo+"\n" if estereotipo else "")+titulo,ha="center",va="center",
+            fontsize=fs if not estereotipo else 9.5,weight="bold",style="italic" if abstracta else "normal")
     if miembros:
         ax.plot([x,x+w],[y+h-th]*2,color=EDGE,lw=1)
         ax.text(x+1,y+h-th-0.8,"\n".join(miembros),ha="left",va="top",fontsize=7.6,family="monospace")
@@ -32,10 +33,18 @@ caja(96,58,30,11,"Ventana  (RAII)",["mostrar(), esperarTecla()","estaAbierta()"]
 caja(96,42,30,11,"MedidorFPS",["registrarCuadro()","fps(): double  (chrono)"])
 comp(78,64,96,64); comp(78,55,96,48)
 # Fuentes
-caja(6,28,34,14,"FuenteVideo",["+ leer(Mat&): bool","+ descripcion(), retardoMs()","# captura_: VideoCapture"],C_ABS,True)
-caja(1,4,19,9,"Webcam",["dispositivo_"]); caja(24,4,19,9,"ArchivoVideo",["ruta_, repetir_","leer() override"])
+caja(4,30,34,12,"FuenteVideo",["+ leer(Mat&): bool","+ descripcion(), retardoMs()"],C_ABS,True)
 comp(50,52,30,42,"unique_ptr",-6,0)
-ax.plot([10.5,10.5,33.5,33.5],[13,18,18,13],color=EDGE,lw=1.1); ax.plot([23,23],[18,25.8],color=EDGE,lw=1.1); triangulo(23,28)
+caja(0,10,22.5,10,"FuenteOpenCV",["# captura_:","  VideoCapture"],C_ABS,True)
+caja(24.5,10,21,11,"FuenteEnHilo",["- hilo_: std::thread","- detener_: atomic"],estereotipo="«decorador»")
+ax.plot([11.25,11.25,35,35],[20,24.5,24.5,21],color=EDGE,lw=1.1); ax.plot([21,21],[24.5,27.8],color=EDGE,lw=1.1); triangulo(21,30)
+# FuenteEnHilo envuelve otra FuenteVideo (interna_)
+ax.plot([44,44,38],[24.2,36,36],color=EDGE,lw=1.1); rombo(44,21,0,1)
+ax.text(45,28,"interna_",fontsize=7.5,color="#555",rotation=90,va="center")
+caja(0,-12,10,8,"Webcam",fs=9); caja(11.5,-12,13,8,"ArchivoVideo",fs=8.5)
+ax.plot([5,5,18,18],[-4,0,0,-4],color=EDGE,lw=1.1); ax.plot([11.25,11.25],[0,7.8],color=EDGE,lw=1.1); triangulo(11.25,10)
+caja(25,-12,22,9,"ColaSegura<Mat>",["insertar(), extraer()","mutex + cond. var."])
+comp(35,10,35,-3)
 # Filtros
 caja(50,30,32,11,"CadenaFiltros",["agregar(), alternar(tecla)","procesar(entrada, salida)"])
 comp(64,52,64,41)

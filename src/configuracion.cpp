@@ -34,6 +34,8 @@ void validar(const Configuracion& c) {
         throw std::invalid_argument("el índice de cámara debe ser >= 0");
     if (c.tipoFuente == TipoFuente::Archivo && c.rutaArchivo.empty())
         throw std::invalid_argument("falta la ruta del archivo de video");
+    if (c.usarHilos && c.tamanoCola < 1)
+        throw std::invalid_argument("el tamaño de la cola debe ser >= 1");
     if (c.ancho <= 0 || c.alto <= 0)
         throw std::invalid_argument("la resolución debe ser positiva");
     if (c.kernelDesenfoque < 3 || c.kernelDesenfoque % 2 == 0)
@@ -69,6 +71,12 @@ Configuracion parsearArgumentos(int argc, const char* const argv[]) {
             c.rutaArchivo = valor();
         } else if (opcion == "--repetir") {
             c.repetir = true;
+        } else if (opcion == "--hilos") {
+            c.usarHilos = true;
+        } else if (opcion == "--cola") {
+            const int tam = aEntero(valor(), opcion);
+            if (tam < 1) throw std::invalid_argument("el tamaño de la cola debe ser >= 1");
+            c.tamanoCola = static_cast<std::size_t>(tam);
         } else if (opcion == "--ancho") {
             c.ancho = aEntero(valor(), opcion);
         } else if (opcion == "--alto") {
@@ -100,7 +108,9 @@ std::string textoUso(const std::string& programa) {
        << "  -a, --archivo RUTA    usar un archivo de video\n"
        << "      --repetir         reiniciar el archivo al llegar al final\n"
        << "      --ancho N         ancho solicitado a la webcam (640)\n"
-       << "      --alto N          alto solicitado a la webcam (480)\n\n"
+       << "      --alto N          alto solicitado a la webcam (480)\n"
+       << "      --hilos           capturar en un hilo aparte, con una cola entre hilos\n"
+       << "      --cola N          capacidad de esa cola, >= 1 (4)\n\n"
        << "Parámetros de filtros:\n"
        << "      --desenfoque K    kernel gaussiano, impar >= 3 (15)\n"
        << "      --canny-bajo U    umbral bajo de Canny (50)\n"

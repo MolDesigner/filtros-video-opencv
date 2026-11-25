@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 enum class TipoFuente { Camara, Archivo };
@@ -12,6 +13,9 @@ struct Configuracion {
     bool repetir = false;         // reiniciar el archivo al terminar
     int ancho = 640;              // resolución solicitada a la webcam
     int alto = 480;
+
+    bool usarHilos = false;       // capturar en un hilo aparte (FuenteEnHilo)
+    std::size_t tamanoCola = 4;   // capacidad de la cola entre hilos, >= 1
 
     int kernelDesenfoque = 15;    // impar y > 1
     double cannyBajo = 50.0;      // 0 <= bajo < alto

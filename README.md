@@ -27,6 +27,7 @@ El ejecutable queda en `build/filtros_video`.
 ./build/filtros_video --archivo video.mp4      # archivo de video (sin cámara)
 ./build/filtros_video -a video.mp4 --repetir   # reproducir el archivo en bucle
 ./build/filtros_video -f bc --desenfoque 7     # iniciar con desenfoque + Canny
+./build/filtros_video --hilos --cola 4         # capturar en un hilo aparte
 ./build/filtros_video --ayuda
 ```
 
@@ -38,6 +39,8 @@ El ejecutable queda en `build/filtros_video`.
 | `-a, --archivo RUTA` | Usar un archivo de video como fuente | |
 | `--repetir` | Reiniciar el archivo al llegar al final | no |
 | `--ancho N`, `--alto N` | Resolución solicitada a la webcam | `640x480` |
+| `--hilos` | Capturar en un hilo aparte, con una cola protegida por `std::mutex` | no |
+| `--cola N` | Capacidad de esa cola (≥ 1) | `4` |
 | `--desenfoque K` | Kernel gaussiano (impar, ≥ 3) | `15` |
 | `--canny-bajo U`, `--canny-alto U` | Umbrales de Canny (`0 ≤ bajo < alto`) | `50`, `150` |
 | `--pixel N` | Tamaño del bloque de pixelado (≥ 2) | `10` |
@@ -73,19 +76,36 @@ activen. Por ejemplo, `b` + `c` primero desenfoca y después detecta bordes.
 | `3` | No se pudo abrir la cámara o el archivo de video |
 | `4` | Error interno de OpenCV |
 
+## Pruebas unitarias
+
+Las pruebas no usan la cámara: cubren la cola entre hilos, los filtros, la cadena de filtros,
+el medidor de FPS, el parser de la línea de comandos y la fuente con hilo, esta última con una
+fuente falsa. No necesitan bibliotecas externas.
+
+```bash
+cmake --build build -j
+ctest --test-dir build --output-on-failure   # 6 grupos, 31 pruebas
+./build/pruebas_unitarias cola               # un solo grupo, con el detalle de cada prueba
+```
+
+Para compilar sin pruebas: `cmake -S . -B build -DCONSTRUIR_PRUEBAS=OFF`.
+
 ## Estructura
 
 ```
 include/              cabeceras (.hpp)
   configuracion.hpp   struct Configuracion y parser de la línea de comandos
   errores.hpp         excepción ErrorFuenteVideo
-  fuente_video.hpp    FuenteVideo (abstracta) -> Webcam, ArchivoVideo + fábrica
+  cola_segura.hpp     ColaSegura<T>: cola acotada con std::mutex y condition_variable
+  fuente_video.hpp    FuenteVideo -> FuenteOpenCV -> Webcam, ArchivoVideo;
+                      FuenteEnHilo (decorador que captura en otro hilo) + fábrica
   filtros.hpp         Filtro (abstracta) -> 7 filtros concretos
   cadena_filtros.hpp  CadenaFiltros: filtros asociados a teclas, activables
   medidor_fps.hpp     MedidorFPS con std::chrono (promedio móvil)
   ventana.hpp         Ventana: envoltorio RAII de una ventana de HighGUI
   aplicacion.hpp      Aplicacion: ciclo capturar -> procesar -> mostrar
 src/                  implementaciones (.cpp) y main.cpp
+tests/                pruebas unitarias y un marco de pruebas mínimo
 docs/                 reporte (Word y PDF), diagrama de clases y figuras
 CMakeLists.txt
 ```
@@ -99,5 +119,8 @@ CMakeLists.txt
   explícitos. Si ocurre una excepción, la cámara y la ventana se cierran de todos modos.
 - **STL:** `std::vector`, `std::deque`, `std::map` con `std::function`, y los algoritmos
   `find_if`, `any_of`, `count_if`, `for_each`, `transform` y `accumulate`.
+- **Concurrencia (opcional):** `FuenteEnHilo` envuelve cualquier fuente y la lee desde otro
+  hilo, dejando los cuadros en una `ColaSegura`. Si el hilo productor falla, la excepción se
+  guarda en un `std::exception_ptr` y se relanza en el hilo principal.
 - **Excepciones:** `std::invalid_argument` para parámetros inválidos y `ErrorFuenteVideo`
   para cámaras o archivos que no se pueden abrir. `main` los atrapa y devuelve un código distinto para cada caso.

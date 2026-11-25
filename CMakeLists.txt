@@ -10,8 +10,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(OpenCV REQUIRED)
+find_package(Threads REQUIRED)
 
-# Biblioteca con toda la lógica (reutilizable por el ejecutable y por futuras pruebas)
+# Biblioteca con toda la lógica, compartida por el ejecutable y las pruebas
 add_library(nucleo_video STATIC
   src/configuracion.cpp
   src/fuente_video.cpp
@@ -22,7 +23,7 @@ add_library(nucleo_video STATIC
   src/aplicacion.cpp
 )
 target_include_directories(nucleo_video PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(nucleo_video PUBLIC ${OpenCV_LIBS})
+target_link_libraries(nucleo_video PUBLIC ${OpenCV_LIBS} Threads::Threads)
 
 if(MSVC)
   target_compile_options(nucleo_video PRIVATE /W4)
@@ -32,3 +33,28 @@ endif()
 
 add_executable(filtros_video src/main.cpp)
 target_link_libraries(filtros_video PRIVATE nucleo_video)
+
+# ---------------- Pruebas unitarias (no usan la cámara) ----------------
+option(CONSTRUIR_PRUEBAS "Compilar las pruebas unitarias" ON)
+if(CONSTRUIR_PRUEBAS)
+  enable_testing()
+  add_executable(pruebas_unitarias
+    tests/main_pruebas.cpp
+    tests/prueba_cola.cpp
+    tests/prueba_medidor.cpp
+    tests/prueba_filtros.cpp
+    tests/prueba_configuracion.cpp
+    tests/prueba_fuentes.cpp
+  )
+  target_link_libraries(pruebas_unitarias PRIVATE nucleo_video)
+  target_include_directories(pruebas_unitarias PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+  if(NOT MSVC)
+    target_compile_options(pruebas_unitarias PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+
+  # Un caso de CTest por grupo, para ver en la salida qué parte falla.
+  foreach(grupo cola medidor filtros cadena configuracion fuentes)
+    add_test(NAME ${grupo} COMMAND pruebas_unitarias ${grupo})
+    set_tests_properties(${grupo} PROPERTIES TIMEOUT 30)
+  endforeach()
+endif()
