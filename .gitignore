@@ -1,0 +1,17 @@
+# Compilación
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# Editores y sistema
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Archivos de Office temporales
+~$*
+
+# Enunciado del profesor (no forma parte de la entrega)
+/Proyecto final procesamiento de video con OpenCV y C++.pdf
