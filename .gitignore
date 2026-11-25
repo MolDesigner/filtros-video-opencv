@@ -15,3 +15,9 @@ CMakeFiles/
 
 # Enunciado del profesor (no forma parte de la entrega)
 /Proyecto final procesamiento de video con OpenCV y C++.pdf
+
+# Archivos de bloqueo de LibreOffice
+.~lock.*#
+
+# Versión editable del reporte (se entrega solo el PDF)
+docs/*.docx

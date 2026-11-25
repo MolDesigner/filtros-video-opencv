@@ -106,7 +106,7 @@ include/              cabeceras (.hpp)
   aplicacion.hpp      Aplicacion: ciclo capturar -> procesar -> mostrar
 src/                  implementaciones (.cpp) y main.cpp
 tests/                pruebas unitarias y un marco de pruebas mínimo
-docs/                 reporte (Word y PDF), diagrama de clases y figuras
+docs/                 reporte (PDF), diagrama de clases y figuras
 CMakeLists.txt
 ```
 
